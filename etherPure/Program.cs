@@ -8,7 +8,6 @@ using Nethereum.Geth;
 using System.Threading;
 using NUnit;
 using NUnit.Framework;
-using Assert = Xunit.Assert;
 using System.Numerics;
 
 
@@ -16,11 +15,10 @@ namespace etherPure
 {
     class Program
     {
-        static Web3Geth web3Geth = new Web3Geth("http://localhost:8545");
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            //Create a new Variable that will act as the Sender's address
+              //Create a new Variable that will act as the Sender's address
             var senderAddress = "0x12890d2cce102216644c59daE5baed380d84830c";
             //Create a variable that will be the password, for the sake of being easy, I named it password
             var password = "password";
@@ -29,19 +27,20 @@ namespace etherPure
             //The byte code can be found in the smart contract file that was created earlier that ends with .bin. Copy the entire address here and use the prefix 0x
             var byteCode = "0x6060604052341561000f57600080fd5b6040516020806100d0833981016040528080516000555050609b806100356000396000f300606060405260043610603e5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631df4f14481146043575b600080fd5b3415604d57600080fd5b60566004356068565b60405190815260200160405180910390f35b60005402905600a165627a7a723058201b96b117e951a2c6def35ae7c9393bc5949657671cc55f7e9420c2f9547299a70029";
             //create a new variable that will be mulitplied if the transaction is recieved.
-            var userVal = 7;
+            var multiplier = 7;
             //Sync up with your TestChain
             Console.WriteLine("Establishing Server connect");
-            //var web3Geth = new Web3Geth("http://localhost:8545");
+            var web3Geth = new Web3Geth("http://localhost:8545");
             web3Geth.TransactionManager.DefaultGas = BigInteger.Parse("100000");
-            
-            
-            Console.WriteLine("Attempting account unlock");
-            unlockAcct(senderAddress,password).GetAwaiter().GetResult();
-            
+            //Send the pack
+            Console.WriteLine("Unlocking account and initiating send");
+            var unlockAccountResult = await web3Geth.Personal.UnlockAccount.SendRequestAsync(senderAddress, password, 120);
+            Console.WriteLine("Checking account unlock");
+            Assert.True(unlockAccountResult);
          
-            Console.WriteLine("Deploying Contract");
-            deployContrct(abi,byteCode,senderAddress,userVal).GetAwaiter().GetResult();
+            Console.WriteLine("Hashing transaction");
+            var transactionHash = await web3Geth.Eth.DeployContract.SendRequestAsync(abi,byteCode, senderAddress,multiplier);
+            Console.WriteLine(senderAddress);
             //Console.WriteLine(transactionHash);
             
             
@@ -66,20 +65,6 @@ namespace etherPure
             Assert.True(mineResult);
 
             var contractAddress = receipt.ContractAddress;
-        }
-        static async Task unlockAcct(string addrStr, string psswd)
-        {
-            //Send the pack
-            Console.WriteLine("Unlocking account and initiating send");
-            var unlockAccountResult = await web3Geth.Personal.UnlockAccount.SendRequestAsync(addrStr, psswd, 120);
-            Console.WriteLine("Result of unlocking Account: ", unlockAccountResult);
-        }
-
-        static async Task deployContrct(string abiVar, string byteCodeVar, string senderAddressVar, int usrValVar)
-        {
-            var transactionHash = await web3Geth.Eth.DeployContract.SendRequestAsync(abiVar,byteCodeVar, senderAddressVar,usrValVar);
-            Console.WriteLine("Transaction Hash: ", transactionHash);
-
         }
     }
 }
