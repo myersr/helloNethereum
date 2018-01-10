@@ -2,11 +2,11 @@ pragma solidity ^0.4.0;
 
 contract SimpleStorage {
     uint storedData;
-    event dSet(uint indexed a, address indexed sender);
+    event DSet(uint indexed x, address indexed sender);
 
     function set(uint x) public {
         storedData = x;
-        dSet(x, msg.sender);
+        DSet(x, msg.sender);
         
     }
 
